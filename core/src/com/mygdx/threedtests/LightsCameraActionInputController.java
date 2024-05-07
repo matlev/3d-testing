@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 
 public class LightsCameraActionInputController extends CameraInputController {
@@ -17,7 +16,10 @@ public class LightsCameraActionInputController extends CameraInputController {
     protected Environment environment;
     protected ModelInstance actor;
 
+    // Mouse
+    public int snapToActorButton = Input.Buttons.RIGHT;
 
+    // Keyboard
     protected boolean controlPressed;
     public int controlKey = Input.Keys.CONTROL_LEFT;
     protected boolean changeLightXPressed;
@@ -29,9 +31,9 @@ public class LightsCameraActionInputController extends CameraInputController {
     public int toggleDirectionLightKey = Input.Keys.NUMPAD_0;
     protected boolean lightOn = true;
 
+    // Drag support
     private float startX, startY, endX;
     private final Vector3 tmpV1 = new Vector3();
-    private final Quaternion cameraRotation = new Quaternion();
 
     public LightsCameraActionInputController(Camera cam, DirectionalShadowLight light, Environment environment, ModelInstance actor) {
         super(cam);
@@ -106,14 +108,14 @@ public class LightsCameraActionInputController extends CameraInputController {
         touched += 1;
         multiTouch = touched > 1;
         if (multiTouch) {
-            this.button = translateButton;
+            this.button = snapToActorButton;
             button = this.button;
         }
         startX = screenX;
         startY = screenY;
 
         // Snap actor to current camera vector
-        if (button == translateButton) {
+        if (button == snapToActorButton) {
             rotateActor(endX);
             endX = 0f;
         }
@@ -125,7 +127,7 @@ public class LightsCameraActionInputController extends CameraInputController {
         touched -= 1;
         multiTouch = touched > 1;
         Gdx.app.log("touch-up event", "down: " + pointer + " " + button + this.button + " \ttouched: " + touched + " " + multiTouch);
-        if (touched > 0 && button == translateButton) {
+        if (touched > 0 && button == snapToActorButton) {
             this.button = rotateButton;
         }
         return super.touchUp(screenX, screenY, pointer, button) || activatePressed;
@@ -147,7 +149,7 @@ public class LightsCameraActionInputController extends CameraInputController {
             rotateCamera(deltaX, deltaY);
         }
         // Rotate actor with camera
-        else if (button == translateButton) { // TODO: rename translate to snap
+        else if (button == snapToActorButton) {
             rotateCamera(deltaX, deltaY);
             rotateActor(deltaX);
         }
