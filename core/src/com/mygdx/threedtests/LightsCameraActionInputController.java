@@ -20,6 +20,7 @@ public class LightsCameraActionInputController extends CameraInputController {
     // Actor movement
     private final Quaternion actorRot = new Quaternion();
     private final Vector3 forwardVector = new Vector3(0, 0, -1f);
+    private final Vector3 orthoVector = new Vector3(1f, 0, 0);
 
     // Mouse
     public int snapToActorButton = Input.Buttons.RIGHT;
@@ -96,37 +97,40 @@ public class LightsCameraActionInputController extends CameraInputController {
     public void update() {
         final float delta = Gdx.graphics.getDeltaTime();
 
-        // No mouse, camera rotates with actor and follows their movement
-        if (touched == 0) {
-            if (rotateRightPressed) {
+
+        if (rotateRightPressed) {
+            if (touched == 0) {
                 rotateCamera(-delta, 0);
                 rotateActor(-delta);
             }
-            if (rotateLeftPressed) {
-                rotateCamera(delta, 0);
-                rotateActor(delta);
+            else if (this.button == snapToActorButton) {
+                moveActor(-delta, orthoVector);
+                moveCamera(tmpV1);
             }
-            if (forwardPressed) {
-                // Get the forward unit vector in the direction the actor is facing
-                actor.transform.getRotation(actorRot);
-                tmpV1.set(forwardVector).mul(actorRot);
-
-                // Add the unit vector, scaled to the magnitude of movement in delta time, to the actor matrix
-                actor.transform.trn(tmpV1.scl(delta * translateUnits));
-
-                // Update the camera position and its target by the actor's movement vector
-                camera.position.add(tmpV1);
-                target.add(tmpV1);
-            }
-            if (backwardPressed) {
-//                tmpV1.set(camera.direction.x, 0, camera.direction.z).scl(-delta * translateUnits);
-//                camera.translate(tmpV1);
-//                actor.transform.translate(tmpV1);
-//                target.add(tmpV1);
+            else if (this.button == rotateButton) {
+                rotateActor(-delta);
             }
         }
-
-
+        if (rotateLeftPressed) {
+            if (touched == 0) {
+                rotateCamera(delta, 0);
+                rotateActor(delta);
+            } else if (this.button == snapToActorButton) {
+                moveActor(delta, orthoVector);
+                moveCamera(tmpV1);
+            }
+            else if (this.button == rotateButton) {
+                rotateActor(delta);
+            }
+        }
+        if (forwardPressed) {
+            moveActor(delta, forwardVector);
+            moveCamera(tmpV1);
+        }
+        if (backwardPressed) {
+            moveActor(-delta, forwardVector);
+            moveCamera(tmpV1);
+        }
 
         camera.update();
     }
@@ -185,7 +189,7 @@ public class LightsCameraActionInputController extends CameraInputController {
             camera.translate(tmpV1.set(camera.direction).scl(deltaY * translateUnits));
             if (forwardTarget) target.add(tmpV1);
         }
-        if (autoUpdate) camera.update();
+        camera.update();
         return true;
     }
 
@@ -195,8 +199,27 @@ public class LightsCameraActionInputController extends CameraInputController {
         camera.rotateAround(target, Vector3.Y, deltaX * -rotateAngle);
     }
 
+    /**
+     * Move the camera and its target in a vector direction.
+     *
+     * @param translationVector the direction and magnitude to move.
+     */
+    private void moveCamera(Vector3 translationVector) {
+        camera.position.add(translationVector);
+        target.add(translationVector);
+    }
+
     private void rotateActor(float deltaX) {
         actor.transform.rotate(Vector3.Y, deltaX * -rotateAngle);
+    }
+
+    private void moveActor(float delta, Vector3 movementAxis) {
+        // Get the forward unit vector in the direction the actor is facing
+        actor.transform.getRotation(actorRot);
+        tmpV1.set(movementAxis).mul(actorRot);
+
+        // Add the unit vector, scaled to the magnitude of movement in delta time, to the actor matrix
+        actor.transform.trn(tmpV1.scl(delta * translateUnits));
     }
 
 }
