@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 
 public class LightsCameraActionInputController extends CameraInputController {
@@ -15,6 +16,10 @@ public class LightsCameraActionInputController extends CameraInputController {
     protected DirectionalShadowLight light;
     protected Environment environment;
     protected ModelInstance actor;
+
+    // Actor movement
+    private final Quaternion actorRot = new Quaternion();
+    private final Vector3 forwardVector = new Vector3(0, 0, -1f);
 
     // Mouse
     public int snapToActorButton = Input.Buttons.RIGHT;
@@ -34,6 +39,8 @@ public class LightsCameraActionInputController extends CameraInputController {
     // Drag support
     private float startX, startY, endX;
     private final Vector3 tmpV1 = new Vector3();
+    private int touched;
+    private boolean multiTouch;
 
     public LightsCameraActionInputController(Camera cam, DirectionalShadowLight light, Environment environment, ModelInstance actor) {
         super(cam);
@@ -88,21 +95,42 @@ public class LightsCameraActionInputController extends CameraInputController {
     @Override
     public void update() {
         final float delta = Gdx.graphics.getDeltaTime();
-        if (rotateRightPressed) camera.rotate(camera.up, -delta * rotateAngle);
-        if (rotateLeftPressed) camera.rotate(camera.up, delta * rotateAngle);
-        if (forwardPressed) {
-            camera.translate(tmpV1.set(camera.direction).scl(delta * translateUnits));
-            if (forwardTarget) target.add(tmpV1);
+
+        // No mouse, camera rotates with actor and follows their movement
+        if (touched == 0) {
+            if (rotateRightPressed) {
+                rotateCamera(-delta, 0);
+                rotateActor(-delta);
+            }
+            if (rotateLeftPressed) {
+                rotateCamera(delta, 0);
+                rotateActor(delta);
+            }
+            if (forwardPressed) {
+                // Get the forward unit vector in the direction the actor is facing
+                actor.transform.getRotation(actorRot);
+                tmpV1.set(forwardVector).mul(actorRot);
+
+                // Add the unit vector, scaled to the magnitude of movement in delta time, to the actor matrix
+                actor.transform.trn(tmpV1.scl(delta * translateUnits));
+
+                // Update the camera position and its target by the actor's movement vector
+                camera.position.add(tmpV1);
+                target.add(tmpV1);
+            }
+            if (backwardPressed) {
+//                tmpV1.set(camera.direction.x, 0, camera.direction.z).scl(-delta * translateUnits);
+//                camera.translate(tmpV1);
+//                actor.transform.translate(tmpV1);
+//                target.add(tmpV1);
+            }
         }
-        if (backwardPressed) {
-            camera.translate(tmpV1.set(camera.direction).scl(-delta * translateUnits));
-            if (forwardTarget) target.add(tmpV1);
-        }
-        if (autoUpdate) camera.update();
+
+
+
+        camera.update();
     }
 
-    private int touched;
-    private boolean multiTouch;
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         touched += 1;
@@ -126,11 +154,10 @@ public class LightsCameraActionInputController extends CameraInputController {
     public boolean touchUp (int screenX, int screenY, int pointer, int button) {
         touched -= 1;
         multiTouch = touched > 1;
-        Gdx.app.log("touch-up event", "down: " + pointer + " " + button + this.button + " \ttouched: " + touched + " " + multiTouch);
-        if (touched > 0 && button == snapToActorButton) {
-            this.button = rotateButton;
+        if (touched > 0) {
+            this.button = button == snapToActorButton ? rotateButton : snapToActorButton;
         }
-        return super.touchUp(screenX, screenY, pointer, button) || activatePressed;
+        return super.touchUp(screenX, screenY, pointer, button);
     }
 
     @Override
