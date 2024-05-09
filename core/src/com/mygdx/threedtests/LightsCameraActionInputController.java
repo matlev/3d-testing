@@ -127,7 +127,7 @@ public class LightsCameraActionInputController extends CameraInputController {
                 rotateActor(delta);
             }
         }
-        if (forwardPressed) {
+        if (forwardPressed || touched == 2) {
             moveActor(delta, forwardVector);
             moveCamera(tmpV1);
         }
@@ -166,6 +166,7 @@ public class LightsCameraActionInputController extends CameraInputController {
         touched -= 1;
         multiTouch = touched > 1;
         if (touched > 0) {
+            // Button is the just-release button. this.button is the button still being pressed.
             this.button = button == snapToActorButton ? rotateButton : snapToActorButton;
         } else {
             Gdx.input.setCursorCatched(false);
