@@ -37,7 +37,7 @@ public class ThreeDTest extends ApplicationAdapter {
 
 		// Create Camera
 		cam = new PerspectiveCamera(67, width, height);
-		cam.position.set(8.4f, 4f, 1.1f);
+		cam.position.set(8.4f, 5f, 1.1f);
 		cam.lookAt(2.8f, 0f, -0.8f);
 		cam.near = 1f;
 		cam.far = 50f;

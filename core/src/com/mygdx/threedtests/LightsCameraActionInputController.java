@@ -8,8 +8,12 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.Matrix3;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
+
+import static com.badlogic.gdx.math.MathUtils.*;
 
 public class LightsCameraActionInputController extends CameraInputController {
 
@@ -21,6 +25,9 @@ public class LightsCameraActionInputController extends CameraInputController {
     private final Quaternion actorRot = new Quaternion();
     private final Vector3 forwardVector = new Vector3(0, 0, -1f);
     private final Vector3 orthoVector = new Vector3(1f, 0, 0);
+    private final Vector3 upVector = new Vector3(0, 1f, 0);
+    private Vector3 sideVector = new Vector3();
+    private final Matrix4 rotMatrix = new Matrix4();
 
     // Mouse
     public int snapToActorButton = Input.Buttons.RIGHT;
@@ -38,7 +45,7 @@ public class LightsCameraActionInputController extends CameraInputController {
     protected boolean lightOn = true;
 
     // Drag support
-    private float startX, startY, endX;
+    private float startX, startY;
     private final Vector3 tmpV1 = new Vector3();
     private int touched;
     private boolean multiTouch;
@@ -148,11 +155,12 @@ public class LightsCameraActionInputController extends CameraInputController {
 
         // Snap actor to current camera vector
         if (button == snapToActorButton) {
-            rotateActor(endX);
-            endX = 0f;
+            snapActorToCameraOrientation();
         }
         return super.touchDown(screenX, screenY, pointer, button);
     }
+
+
 
     @Override
     public boolean touchUp (int screenX, int screenY, int pointer, int button) {
@@ -176,7 +184,6 @@ public class LightsCameraActionInputController extends CameraInputController {
     protected boolean process (float deltaX, float deltaY, int button) {
         // Rotate only the camera
         if (button == rotateButton) {
-            endX += deltaX;
             rotateCamera(deltaX, deltaY);
         }
         // Rotate actor with camera
@@ -211,6 +218,24 @@ public class LightsCameraActionInputController extends CameraInputController {
 
     private void rotateActor(float deltaX) {
         actor.transform.rotate(Vector3.Y, deltaX * -rotateAngle);
+    }
+
+    private void snapActorToCameraOrientation() {
+        tmpV1.set(camera.direction.x, 0, camera.direction.z).nor(); // forward
+        sideVector = upVector.cpy().crs(tmpV1).nor(); // right
+        rotMatrix.idt();
+        rotMatrix.val[Matrix4.M00] = sideVector.x;
+        rotMatrix.val[Matrix4.M10] = sideVector.y;
+        rotMatrix.val[Matrix4.M20] = sideVector.z;
+        rotMatrix.val[Matrix4.M01] = upVector.x;
+        rotMatrix.val[Matrix4.M11] = upVector.y;
+        rotMatrix.val[Matrix4.M21] = upVector.z;
+        rotMatrix.val[Matrix4.M02] = tmpV1.x;
+        rotMatrix.val[Matrix4.M12] = tmpV1.y;
+        rotMatrix.val[Matrix4.M22] = tmpV1.z;
+
+        actor.transform.getTranslation(tmpV1);
+        actor.transform.set(rotMatrix).setTranslation(tmpV1).rotate(upVector, 180f);
     }
 
     private void moveActor(float delta, Vector3 movementAxis) {
