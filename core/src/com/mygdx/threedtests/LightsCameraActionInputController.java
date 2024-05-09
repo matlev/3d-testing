@@ -8,12 +8,9 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
-import com.badlogic.gdx.math.Matrix3;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
-
-import static com.badlogic.gdx.math.MathUtils.*;
 
 public class LightsCameraActionInputController extends CameraInputController {
 
@@ -104,7 +101,7 @@ public class LightsCameraActionInputController extends CameraInputController {
     public void update() {
         final float delta = Gdx.graphics.getDeltaTime();
 
-
+        // Repetitive on purpose so that each key-press maintains its own logic handling.
         if (rotateRightPressed) {
             if (touched == 0) {
                 rotateCamera(-delta, 0);
@@ -144,6 +141,8 @@ public class LightsCameraActionInputController extends CameraInputController {
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+        Gdx.input.setCursorCatched(true);
+
         touched += 1;
         multiTouch = touched > 1;
         if (multiTouch) {
@@ -168,6 +167,8 @@ public class LightsCameraActionInputController extends CameraInputController {
         multiTouch = touched > 1;
         if (touched > 0) {
             this.button = button == snapToActorButton ? rotateButton : snapToActorButton;
+        } else {
+            Gdx.input.setCursorCatched(false);
         }
         return super.touchUp(screenX, screenY, pointer, button);
     }
