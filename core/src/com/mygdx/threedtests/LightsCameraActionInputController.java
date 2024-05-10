@@ -159,8 +159,6 @@ public class LightsCameraActionInputController extends CameraInputController {
         return super.touchDown(screenX, screenY, pointer, button);
     }
 
-
-
     @Override
     public boolean touchUp (int screenX, int screenY, int pointer, int button) {
         touched -= 1;
