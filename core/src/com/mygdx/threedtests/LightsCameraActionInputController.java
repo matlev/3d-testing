@@ -3,9 +3,9 @@ package com.mygdx.threedtests;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Matrix4;
@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.Vector3;
 public class LightsCameraActionInputController extends CameraInputController {
 
     protected DirectionalShadowLight light;
+    private final Color lightColor;
     protected Environment environment;
     protected ModelInstance actor;
 
@@ -52,6 +53,7 @@ public class LightsCameraActionInputController extends CameraInputController {
 
         this.environment = environment;
         this.light = light;
+        this.lightColor = light.color.cpy();
         this.actor = actor;
     }
 
@@ -70,12 +72,9 @@ public class LightsCameraActionInputController extends CameraInputController {
         } else if (keycode == toggleDirectionLightKey) {
             lightOn = !lightOn;
             if (!lightOn) {
-                environment.remove(light);
+                light.setColor(0, 0, 0, 1);
             } else {
-                DirectionalLightsAttribute dirLights = ((DirectionalLightsAttribute) environment.get(DirectionalLightsAttribute.Type));
-                if (dirLights == null || !dirLights.lights.contains(light, false)) {
-                    environment.add(light);
-                }
+                light.setColor(lightColor);
             }
         }
         return false;
@@ -203,7 +202,7 @@ public class LightsCameraActionInputController extends CameraInputController {
     private void rotateCamera(float deltaX, float deltaY) {
         tmpV1.set(camera.direction).crs(camera.up).y = 0f;
         camera.rotateAround(target, tmpV1.nor(), deltaY * rotateAngle);
-        camera.rotateAround(target, Vector3.Y, deltaX * -rotateAngle);
+        camera.rotateAround(target, Vector3.Y, deltaX * rotateAngle);
     }
 
     /**
@@ -217,7 +216,7 @@ public class LightsCameraActionInputController extends CameraInputController {
     }
 
     private void rotateActor(float deltaX) {
-        actor.transform.rotate(Vector3.Y, deltaX * -rotateAngle);
+        actor.transform.rotate(Vector3.Y, deltaX * rotateAngle);
     }
 
     private void snapActorToCameraOrientation() {

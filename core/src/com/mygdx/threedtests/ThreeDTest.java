@@ -31,6 +31,7 @@ public class ThreeDTest extends ApplicationAdapter {
 	public Environment environment;
 	public DirectionalShadowLight dLight;
 	public ModelBatch shadowBatch;
+	public DayNightCycle dayNightCycle;
 
 	private final Vector3 tmpV1 = new Vector3();
 	
@@ -38,12 +39,11 @@ public class ThreeDTest extends ApplicationAdapter {
 	public void create () {
 		int width = Gdx.graphics.getWidth();
 		int height = Gdx.graphics.getHeight();
-		Gdx.app.log("graphics","height: " + height + "\twidth: " + width);
 
 		// Create Camera
 		cam = new PerspectiveCamera(67, width, height);
-		cam.position.set(8.4f, 5f, 1.1f);
-		cam.lookAt(2.8f, 0f, -0.8f);
+		cam.position.set(-5f, 5f, 7f);
+		cam.lookAt(-5f, 0f, -1.5f);
 		cam.near = 1f;
 		cam.far = 50f;
 		cam.update();
@@ -55,7 +55,7 @@ public class ThreeDTest extends ApplicationAdapter {
 		modelBox = modelBuilder.createBox(2f, 2f, 2f,
 				new Material(ColorAttribute.createDiffuse(Color.GREEN)),
 				Usage.Position | Usage.Normal);
-		instanceBox = new ModelInstance(modelBox, 2.8f, 0f, -0.8f);
+		instanceBox = new ModelInstance(modelBox, -5f, 0f, -1.5f);
 		instanceBox.transform.rotateTowardDirection(new Vector3(cam.direction.x, 0, cam.direction.z), Vector3.Y);
 
 		modelBuilder.begin();
@@ -74,22 +74,28 @@ public class ThreeDTest extends ApplicationAdapter {
 
 		// Create environment lighting
 		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.8f, 0.6f, 0.4f, 1f));
+		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1f));
 		environment.add((dLight = new DirectionalShadowLight(4096, 4096, 100f, 100f, 1f, 200f))
-				.set(1f, 1f, 1f, -3f, -1.6f, -0.4f));
+				.set(1f, 1f, 1f, new Vector3(17f, -1f, 3f).nor()));
 		environment.shadowMap = dLight;
+		DirectionalShadowLight moon = (DirectionalShadowLight) new DirectionalShadowLight(4096, 4096, 100f, 100f, 1f, 200f)
+				.set(1f, 1f, 1f, new Vector3(17f, -1f, 3f).nor());
+
 		shadowBatch = new ModelBatch(new DepthShaderProvider());
 
 		// Input controller for mouse and keyboard events
 		inputController = new LightsCameraActionInputController(cam, dLight, environment, instanceBox);
-		inputController.target = new Vector3(2.8f, 0f, -0.8f);
+		inputController.target = new Vector3(-5f, 0f, -1.5f);
 		Gdx.input.setInputProcessor(inputController);
+
+		dayNightCycle = new DayNightCycle(environment, dLight, moon, 40);
 	}
 
 	@Override
 	public void render () {
 		inputController.update();
 		cam.update();
+		dayNightCycle.update();
 
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getBackBufferWidth(), Gdx.graphics.getBackBufferHeight());
 		Gdx.gl.glClearColor(0, 0, 0, 1);
