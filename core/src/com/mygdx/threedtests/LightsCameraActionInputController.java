@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalShadowLight;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
@@ -14,7 +14,7 @@ import com.badlogic.gdx.math.Vector3;
 
 public class LightsCameraActionInputController extends CameraInputController {
 
-    protected DirectionalShadowLight light;
+    protected DirectionalLight light;
     protected Environment environment;
     protected ModelInstance actor;
 
@@ -47,7 +47,7 @@ public class LightsCameraActionInputController extends CameraInputController {
     private int touched;
     private boolean multiTouch;
 
-    public LightsCameraActionInputController(Camera cam, DirectionalShadowLight light, Environment environment, ModelInstance actor) {
+    public LightsCameraActionInputController(Camera cam, DirectionalLight light, Environment environment, ModelInstance actor) {
         super(cam);
 
         this.environment = environment;
